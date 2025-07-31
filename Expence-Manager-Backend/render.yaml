@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fastapi-app
+    env: python
+    buildCommand: ""
+    startCommand: ./start.sh
+    runtime: python
+    pythonVersion: 3.11.9  # ✅ explicitly use a stable version
+    region: oregon
+    plan: free
