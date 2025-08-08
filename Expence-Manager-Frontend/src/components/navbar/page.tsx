@@ -89,6 +89,7 @@ const UserDropdown = ({ user, onLogout, mobile = false }: { user: User | null, o
 const Navbar = () => {
   const [user, setUser] = useState<User | null>(null);
   const [theme, setTheme] = useState('light');
+  console.log(theme);
   // Fetch user info on mount
   useEffect(() => {
     apiService.getCurrentUser().then((u: User) => setUser(u)).catch(() => setUser(null));
@@ -104,19 +105,19 @@ const Navbar = () => {
   }, []);
 
   // Toggle dark/light mode (functional, persists in localStorage)
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      const newTheme = prev === 'light' ? 'dark' : 'light';
-      if (newTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      return newTheme;
-    });
-  };
+  // const toggleTheme = () => {
+  //   setTheme((prev) => {
+  //     const newTheme = prev === 'light' ? 'dark' : 'light';
+  //     if (newTheme === 'dark') {
+  //       document.documentElement.classList.add('dark');
+  //       localStorage.setItem('theme', 'dark');
+  //     } else {
+  //       document.documentElement.classList.remove('dark');
+  //       localStorage.setItem('theme', 'light');
+  //     }
+  //     return newTheme;
+  //   });
+  // };
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
