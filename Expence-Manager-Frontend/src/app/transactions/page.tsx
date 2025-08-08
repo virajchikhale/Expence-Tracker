@@ -200,7 +200,7 @@ const Dashboard = () => {
             <div className="space-y-6">
                 {/* Search Filter */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -208,33 +208,33 @@ const Dashboard = () => {
                             placeholder="Description, place..."
                             value={searchInput}
                             onChange={e => handleFilterChange('searchTerm', e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                 </div>
 
                 {/* Date Range Filter */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
                     <div className="space-y-2">
                         <input 
                             type="date" 
                             value={filters.dateFrom} 
                             onChange={e => handleFilterChange('dateFrom', e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
                         />
                         <input 
                             type="date" 
                             value={filters.dateTo} 
                             onChange={e => handleFilterChange('dateTo', e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
                         />
                     </div>
                 </div>
 
                 {/* Type Filter (Multi-select) */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
                     <MultiSelectDropdown
                         options={['debit', 'credit', 'self_transferred', 'transferred', 'debt_incurred']}
                         selected={filters.type}
@@ -246,7 +246,7 @@ const Dashboard = () => {
                 {/* To Account or Account Filter */}
                 {showToAccount ? (
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Account</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Account</label>
                         <SearchableMultiSelectDropdown
                             options={allAccounts.filter(a => a.type === 'friend').map(a => a.name)}
                             selected={filters.to_account}
@@ -256,7 +256,7 @@ const Dashboard = () => {
                     </div>
                 ) : (
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Accounts</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Accounts</label>
                         <SearchableMultiSelectDropdown
                             options={getFilteredAccounts().map(a => a.name)}
                             selected={filters.accounts}
@@ -268,7 +268,7 @@ const Dashboard = () => {
 
                 {/* Category Filter (Multi-select) */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categories</label>
                     <MultiSelectDropdown
                         options={allCategories}
                         selected={filters.categories}
@@ -279,28 +279,28 @@ const Dashboard = () => {
                 
                 {/* Amount Range Filter */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount Range</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount Range</label>
                     <div className="flex gap-2">
                         <input 
                             type="number" 
                             placeholder="Min" 
                             value={filters.minAmount} 
                             onChange={e => handleFilterChange('minAmount', e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
                         />
                         <input 
                             type="number" 
                             placeholder="Max" 
                             value={filters.maxAmount} 
                             onChange={e => handleFilterChange('maxAmount', e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
                         />
                     </div>
                 </div>
                 
                 <button 
                     onClick={resetFilters} 
-                    className="w-full py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="w-full py-2 text-gray-600 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
                 >
                     Reset Filters
                 </button>
@@ -328,22 +328,22 @@ const Dashboard = () => {
     return (
       <div>
           <Navbar />
-        <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+        <div className="min-h-screen bg-gray-50 dark:bg-black flex flex-col lg:flex-row">
             {/* --- DESKTOP FILTERS SIDEBAR --- */}
-            <aside className="hidden lg:block w-72 bg-white p-6 border-r border-gray-200">
-                <h2 className="text-xl font-semibold mb-6">Filters</h2>
+            <aside className="hidden lg:block w-72 bg-white dark:bg-black p-6 border-r border-gray-200 dark:border-gray-800">
+                <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Filters</h2>
                 {FilterSidebar}
             </aside>
 
             {/* --- MOBILE FILTERS OVERLAY --- */}
             {isMobileFiltersOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden">
-                    <div className="fixed left-0 top-0 bottom-0 w-80 bg-white p-6 overflow-y-auto">
+                    <div className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-black p-6 overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold">Filters</h2>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Filters</h2>
                             <button 
                                 onClick={() => setIsMobileFiltersOpen(false)}
-                                className="p-2 hover:bg-gray-100 rounded-lg"
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                             >
                                 <X size={20} />
                             </button>
@@ -360,17 +360,17 @@ const Dashboard = () => {
                     <div className="flex justify-end mb-4">
                         <button
                             onClick={handleDeleteLatest}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow"
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 transition-colors shadow"
                         >
                             Delete Latest Transaction
                         </button>
                     </div>
                     {/* --- MOBILE HEADER WITH FILTER BUTTON --- */}
                     <div className="flex items-center justify-between mb-6 lg:hidden">
-                        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
                         <button 
                             onClick={() => setIsMobileFiltersOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                         >
                             <Filter size={18} />
                             Filters
@@ -383,17 +383,17 @@ const Dashboard = () => {
                     </div>
 
                     {/* --- TRANSACTIONS TABLE --- */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-white dark:bg-black rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
                         {/* Desktop Table */}
                         <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="border-b border-gray-200">
+                                <thead className="border-b border-gray-200 dark:border-gray-800">
                                     <tr>
-                                        <th className="p-4 font-semibold whitespace-nowrap">Date</th>
-                                        <th className="p-4 font-semibold">Place/Description</th>
-                                        <th className="p-4 font-semibold whitespace-nowrap">Category</th>
-                                        <th className="p-4 font-semibold whitespace-nowrap">Account</th>
-                                        <th className="p-4 font-semibold text-right whitespace-nowrap">Amount</th>
+                                        <th className="p-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">Date</th>
+                                        <th className="p-4 font-semibold text-gray-900 dark:text-white">Place/Description</th>
+                                        <th className="p-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">Category</th>
+                                        <th className="p-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">Account</th>
+                                        <th className="p-4 font-semibold text-right whitespace-nowrap text-gray-900 dark:text-white">Amount</th>
                                         {/* No separate balance column */}
                                     </tr>
                                 </thead>
@@ -401,19 +401,19 @@ const Dashboard = () => {
                                     {transactions.map((transaction, index) => {
                                         const isLastElement = transactions.length === index + 1;
                                         return (
-                                            <tr key={transaction.id} ref={isLastElement ? lastTransactionElementRef : null} className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="p-4 text-sm text-gray-600 whitespace-nowrap">{new Date(transaction.date).toLocaleDateString()}</td>
+                                            <tr key={transaction.id} ref={isLastElement ? lastTransactionElementRef : null} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900">
+                                                <td className="p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{new Date(transaction.date).toLocaleDateString()}</td>
                                                 <td className="p-4 min-w-0">
-                                                    <div className="font-medium text-gray-800 truncate">{transaction.place}</div>
-                                                    <div className="text-sm text-gray-500 truncate">{transaction.description}</div>
+                                                    <div className="font-medium text-gray-800 dark:text-white truncate">{transaction.place}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{transaction.description}</div>
                                                 </td>
-                                                <td className="p-4 text-sm text-gray-600 whitespace-nowrap">{transaction.category}</td>
-                                                <td className="p-4 text-sm text-gray-600 whitespace-nowrap">{transaction.account}</td>
+                                                <td className="p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{transaction.category}</td>
+                                                <td className="p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{transaction.account}</td>
                                                 <td className={`p-4 font-semibold text-right whitespace-nowrap ${
-                                                    transaction.type === 'transferred' ? 'text-orange-600' :
-                                                    transaction.type === 'debt_incurred' ? 'text-purple-600' :
-                                                    transaction.type === 'self_transferred' ? 'text-blue-600' :
-                                                    transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                                                    transaction.type === 'transferred' ? 'text-orange-600 dark:text-orange-400' :
+                                                    transaction.type === 'debt_incurred' ? 'text-purple-600 dark:text-purple-400' :
+                                                    transaction.type === 'self_transferred' ? 'text-blue-600 dark:text-blue-400' :
+                                                    transaction.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                                                   }`}>
                                                     <div>
                                                         {transaction.type === 'credit' ? '+ ' : 
@@ -421,7 +421,7 @@ const Dashboard = () => {
                                                           transaction.type === 'self_transferred' ? '↔ ' : 
                                                           transaction.type === 'debt_incurred' ? '↙ ' : '- '}₹{transaction.amount.toLocaleString()}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 font-normal mt-1">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
                                                         Bal: ₹{transaction.transaction_balance !== undefined ? transaction.transaction_balance.toLocaleString() : '--'}
                                                     </div>
                                                 </td>
@@ -440,24 +440,24 @@ const Dashboard = () => {
                                     <div 
                                         key={transaction.id} 
                                         ref={isLastElement ? lastTransactionElementRef : null}
-                                        className="border-b border-gray-100 p-4 space-y-3"
+                                        className="border-b border-gray-100 dark:border-gray-800 p-4 space-y-3 bg-white dark:bg-black"
                                     >
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-medium text-gray-800 truncate">{transaction.place}</div>
-                                                <div className="text-sm text-gray-500 truncate">{transaction.description}</div>
+                                                <div className="font-medium text-gray-800 dark:text-white truncate">{transaction.place}</div>
+                                                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{transaction.description}</div>
                                             </div>
-                                            <div className={`font-semibold text-right ml-4 ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                                            <div className={`font-semibold text-right ml-4 ${transaction.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                                 <div>
                                                     {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toLocaleString()}
                                                 </div>
-                                                <div className="text-xs text-gray-500 font-normal mt-1">Bal: ₹{transaction.transaction_balance !== undefined ? transaction.transaction_balance.toLocaleString() : '--'}</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">Bal: ₹{transaction.transaction_balance !== undefined ? transaction.transaction_balance.toLocaleString() : '--'}</div>
                                             </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-                                            <span className="bg-gray-100 px-2 py-1 rounded">{new Date(transaction.date).toLocaleDateString()}</span>
-                                            <span className="bg-gray-100 px-2 py-1 rounded">{transaction.category}</span>
-                                            <span className="bg-gray-100 px-2 py-1 rounded">{transaction.account}</span>
+                                        <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <span className="bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">{new Date(transaction.date).toLocaleDateString()}</span>
+                                            <span className="bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">{transaction.category}</span>
+                                            <span className="bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">{transaction.account}</span>
                                         </div>
                                     </div>
                                 );
@@ -466,7 +466,7 @@ const Dashboard = () => {
 
                         {loading && <div className="text-center p-4">Loading more...</div>}
                         {!loading && transactions.length === 0 && (
-                            <div className="text-center p-10 text-gray-500">
+                            <div className="text-center p-10 text-gray-500 dark:text-gray-400">
                                 <div className="text-lg mb-2">No transactions found</div>
                                 <div className="text-sm">Try adjusting your filters</div>
                             </div>

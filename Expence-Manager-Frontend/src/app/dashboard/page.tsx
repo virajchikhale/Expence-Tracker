@@ -255,10 +255,10 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-white mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-200">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -267,7 +267,7 @@ useEffect(() => {
   return (
     <div>
       <Navbar />
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header and Stats Overview (No changes needed here, they use the calculated totals) */}
         {/* <div className="mb-8">
@@ -285,21 +285,21 @@ useEffect(() => {
         
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Personal Balance</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Personal Balance</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {hideBalances ? '****' : `₹${personalBalance.toLocaleString()}`}
                   </p>
                 </div>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full h-12">
+              <div className="p-3 bg-blue-100 dark:bg-gray-900 rounded-full h-12">
                 {/* <Wallet className="text-blue-600" size={24} /> */}
                 <button
                   onClick={() => setHideBalances(!hideBalances)}
-                  className="text-blue-400 hover:text-blue-600"
+                  className="text-blue-400 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-400"
                 >
                   {hideBalances ? <EyeOff size={24} /> : <Eye size={24} />}
                 </button>
@@ -307,43 +307,43 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Money Lent</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Money Lent</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {hideBalances ? '****' : `₹${totalLent.toLocaleString()}`}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
+              <div className="p-3 bg-green-100 dark:bg-gray-900 rounded-full">
                 <TrendingUp className="text-green-600" size={24} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Money Owed</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Money Owed</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                   {hideBalances ? '****' : `₹${totalOwed.toLocaleString()}`}
                 </p>
               </div>
-              <div className="p-3 bg-red-100 rounded-full">
+              <div className="p-3 bg-red-100 dark:bg-gray-900 rounded-full">
                 <TrendingDown className="text-red-600" size={24} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-black p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Net Worth</p>
-                <p className={`text-2xl font-bold ${(personalBalance + totalLent - totalOwed) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Net Worth</p>
+                <p className={`text-2xl font-bold ${(personalBalance + totalLent - totalOwed) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {hideBalances ? '****' : `₹${(personalBalance + totalLent - totalOwed).toLocaleString()}`}
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
+              <div className="p-3 bg-purple-100 dark:bg-gray-900 rounded-full">
                 <Users className="text-purple-600" size={24} />
               </div>
             </div>
@@ -352,30 +352,29 @@ useEffect(() => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Transactions - Changed 'name' to 'place' */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-black rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Transactions</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Transactions</h2>
                 <button
                   onClick={() => setShowAddTransaction(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 transition-colors"
                 >
                   <Plus size={16} />
-                  Add Transaction
                 </button>
               </div>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 {transactions.slice(0, 10).map(transaction => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                     {/* ... icon logic ... */}
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${
-                        transaction.type === 'transferred' ? 'bg-orange-100' :
-                        transaction.type === 'debt_incurred' ? 'bg-purple-100' :
-                        transaction.type === 'self_transferred' ? 'bg-blue-100' :
-                        transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                        transaction.type === 'transferred' ? 'bg-orange-100 dark:bg-orange-900' :
+                        transaction.type === 'debt_incurred' ? 'bg-purple-100 dark:bg-purple-900' :
+                        transaction.type === 'self_transferred' ? 'bg-blue-100 dark:bg-blue-900' :
+                        transaction.type === 'credit' ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'
                       }`}>
                         {transaction.type === 'transferred' ? 
                           <TrendingDown className="text-orange-600" size={20} /> :
@@ -389,20 +388,20 @@ useEffect(() => {
                         }
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{transaction.place}</h3> {/* CHANGED */}
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-medium text-gray-900 dark:text-white">{transaction.place}</h3> {/* CHANGED */}
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           {transaction.category} • {transaction.account}
                           {transaction.to_account && transaction.to_account !== "None" && ` → ${transaction.to_account}`}
                         </p>
-                        <p className="text-xs text-gray-500">{new Date(transaction.date).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(transaction.date).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className={`font-semibold ${
-                        transaction.type === 'transferred' ? 'text-orange-600' :
-                        transaction.type === 'debt_incurred' ? 'text-purple-600' :
-                        transaction.type === 'self_transferred' ? 'text-blue-600' :
-                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                        transaction.type === 'transferred' ? 'text-orange-600 dark:text-orange-400' :
+                        transaction.type === 'debt_incurred' ? 'text-purple-600 dark:text-purple-400' :
+                        transaction.type === 'self_transferred' ? 'text-blue-600 dark:text-blue-400' :
+                        transaction.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       }`}>
                         {transaction.type === 'credit' ? '+ ' : 
                          transaction.type === 'transferred' ? '↗ ' : 
@@ -415,8 +414,8 @@ useEffect(() => {
                 
                 {/* ... empty state ... */}
                 {transactions.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Wallet2 size={48} className="mx-auto mb-4 text-gray-300" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Wallet2 size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-700" />
                     <p>No transactions yet</p>
                     <p className="text-sm">Add transactions to track Your Fainance</p>
                   </div>
@@ -426,35 +425,35 @@ useEffect(() => {
           </div>
 
           {/* Friends & Balances Section - Changed to use 'balance' */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-black rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold text-gray-900">Friends & Balances</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Friends & Balances</h2>
               </div>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 {friendAccounts.map(friend => (
-                  <div key={friend.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={friend.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-blue-600">
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                           {friend.name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{friend.name}</h3>
+                        <h3 className="font-medium text-gray-900 dark:text-white">{friend.name}</h3>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-semibold ${friend.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`font-semibold ${friend.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {hideBalances ? '****' : 
                          friend.balance >= 0 ? 
                          `+₹${friend.balance.toLocaleString()}` : 
                          `-₹${Math.abs(friend.balance).toLocaleString()}`
                         }
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {friend.balance >= 0 ? 'Owes you' : 'You owe'}
                       </p>
                     </div>
@@ -462,8 +461,8 @@ useEffect(() => {
                 ))}
                 {/* ... empty state ... */}
                 {friendAccounts.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Users size={48} className="mx-auto mb-4 text-gray-300" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Users size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-700" />
                     <p>No friend accounts yet</p>
                     <p className="text-sm">Add friends to track lending/borrowing</p>
                   </div>
@@ -473,33 +472,32 @@ useEffect(() => {
           </div>
           
           {/* Personal Accounts Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-black rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Personal Accounts</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Personal Accounts</h2>
                 <button
                   onClick={() => setShowAddAccount(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                 >
                   <Plus size={16} />
-                  Add Account
                 </button>
               </div>
             </div>
             <div className="p-6 space-y-4">
               {personalAccounts.map(account => (
-                <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={account.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <CreditCard className="text-blue-600" size={20} />
+                    <div className="p-2 bg-blue-100 dark:bg-gray-800 rounded-lg">
+                      <CreditCard className="text-blue-600 dark:text-blue-400" size={20} />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">{account.name}</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-white">{account.name}</h3>
                       {/* <p className="text-sm text-gray-600 capitalize">{account.type}</p> */}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`font-semibold ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`font-semibold ${account.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                       {hideBalances ? '****' : `₹${account.balance.toLocaleString()}`}
                     </p>
                   </div>
@@ -507,8 +505,8 @@ useEffect(() => {
               ))}
                 {/* ... empty state ... */}
                 {personalAccounts.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Coins size={48} className="mx-auto mb-4 text-gray-300" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Coins size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-700" />
                     <p>No Accounts Created yet</p>
                     <p className="text-sm">Add Accounts to start Tracking</p>
                   </div>
