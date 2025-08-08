@@ -1,5 +1,6 @@
 "use client"
-import React, { useState, useEffect, Fragment, useRef } from 'react';
+// import React, { useState, useEffect, Fragment, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User } from '@/types';
 import { useRouter, usePathname } from 'next/navigation';
 import { 
@@ -9,9 +10,7 @@ import {
   LogOut, 
   Menu, 
   X, 
-  Wallet, 
-  Sun, 
-  Moon, 
+  Wallet,
   ChevronDown 
 } from 'lucide-react';
 import { apiService } from '@/lib/api';
