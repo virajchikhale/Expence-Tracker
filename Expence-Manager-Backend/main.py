@@ -20,14 +20,71 @@ from fastapi.middleware.cors import CORSMiddleware
 import certifi
 
 # Constants and configuration
+import logging
+import secrets
+import threading
+import time
 
 from dotenv import load_dotenv
 load_dotenv()
+
+logger = logging.getLogger("expense_tracker")
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production").strip().lower()
+IS_DEV = ENVIRONMENT in {"dev", "development", "local", "test"}
 MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = "expense_tracker_db"
-SECRET_KEY = "YOUR_SECRET_KEY"  # Replace with a secure key in production
+DB_NAME = os.getenv("DB_NAME", "expense_tracker_db")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 8)))
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
+
+_PLACEHOLDERS = {"", "your_secret_key", "change-me", "change-me-in-production", "secret", "changeme"}
+
+
+def _load_secret_key() -> str:
+    """The JWT signing key must come from the environment. Production refuses to start without a strong one."""
+    key = os.getenv("JWT_SECRET", "").strip()
+    if key.lower() in _PLACEHOLDERS or len(key) < 32:
+        if IS_DEV:
+            logger.warning("JWT_SECRET missing/weak: using a random per-process key (tokens die on restart)")
+            return secrets.token_urlsafe(48)
+        raise RuntimeError("JWT_SECRET must be set to a random value of at least 32 characters (openssl rand -hex 32). "
+                           "Set ENVIRONMENT=dev to run locally without it.")
+    if "*" in CORS_ORIGINS and not IS_DEV:
+        raise RuntimeError("CORS_ORIGINS must list the frontend origin(s), not *")
+    return key
+
+
+SECRET_KEY = _load_secret_key()
+
+# Minimal in-memory fixed-window limiter (single process; enough to blunt password guessing)
+_rl_lock = threading.Lock()
+_rl_hits: dict = {}
+
+
+def _rl_blocked(key: str, limit: int, window: int) -> bool:
+    now = time.monotonic()
+    with _rl_lock:
+        count, start = _rl_hits.get(key, (0, now))
+        return now - start <= window and count >= limit
+
+
+def _rl_hit(key: str, window: int) -> None:
+    now = time.monotonic()
+    with _rl_lock:
+        if len(_rl_hits) > 10000:
+            for k in [k for k, (_, st) in _rl_hits.items() if now - st > window]:
+                _rl_hits.pop(k, None)
+        count, start = _rl_hits.get(key, (0, now))
+        if now - start > window:
+            count, start = 0, now
+        _rl_hits[key] = (count + 1, start)
+
+
+def _rl_clear(key: str) -> None:
+    with _rl_lock:
+        _rl_hits.pop(key, None)
+
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -36,7 +93,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Connect to MongoDB
-    app.mongodb_client = AsyncIOMotorClient(MONGO_URI, server_api=ServerApi('1'), tlsCAFile=certifi.where())
+    client_kwargs = {}
+    if MONGO_URI and (MONGO_URI.startswith("mongodb+srv://") or "tls=true" in MONGO_URI.lower()):
+        # Atlas / TLS deployments (MongoDB 5+): verified TLS and the Stable API
+        client_kwargs.update(server_api=ServerApi('1'), tlsCAFile=certifi.where())
+    app.mongodb_client = AsyncIOMotorClient(MONGO_URI, **client_kwargs)
     app.mongodb = app.mongodb_client[DB_NAME]
     
     # Check connection
@@ -60,17 +121,27 @@ async def lifespan(app: FastAPI):
     app.mongodb_client.close()
     print("MongoDB connection closed.")
 
-# FastAPI app with lifespan
-app = FastAPI(title="Expense Tracker API", description="API for tracking personal expenses", lifespan=lifespan)
+# FastAPI app with lifespan (interactive docs are off in production unless ENABLE_DOCS=true)
+_docs = IS_DEV or os.getenv("ENABLE_DOCS", "false").strip().lower() == "true"
+app = FastAPI(
+    title="Expense Tracker API", description="API for tracking personal expenses", lifespan=lifespan,
+    docs_url="/docs" if _docs else None, redoc_url=None, openapi_url="/openapi.json" if _docs else None,
+)
 
-# Add CORS middleware
+# CORS: only the configured frontend origin(s); tokens travel in the Authorization header, not cookies
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    return {"status": "ok"}
+
 
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -189,6 +260,9 @@ class UserListResponse(BaseModel):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+_DUMMY_HASH = pwd_context.hash("not-a-real-password")
+
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -208,6 +282,7 @@ async def get_user_by_email(app, email: str):
 async def authenticate_user(app, email: str, password: str):
     user = await get_user_by_email(app, email)
     if not user:
+        verify_password(password, _DUMMY_HASH)      # same cost as a real check: no user enumeration by timing
         return False
     if not verify_password(password, user["hashed_password"]):
         return False
@@ -544,9 +619,15 @@ async def get_tracker(user):
 # Authentication endpoints (no changes)
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    key = "login:" + form_data.username.strip().lower()
+    if _rl_blocked(key, 5, 900) or _rl_blocked("login:*", 300, 900):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait 15 minutes and try again.")
     user = await authenticate_user(app, form_data.username, form_data.password)
     if not user:
+        _rl_hit(key, 900)
+        _rl_hit("login:*", 900)
         raise HTTPException(status_code=401, detail="Incorrect email or password", headers={"WWW-Authenticate": "Bearer"})
+    _rl_clear(key)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user["email"]}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
@@ -561,7 +642,7 @@ async def create_account(account: AccountCreate, current_user: dict = Depends(ge
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/accounts", response_model=AccountListResponse)
 async def list_accounts(current_user: dict = Depends(get_current_user)):
@@ -574,7 +655,7 @@ async def list_accounts(current_user: dict = Depends(get_current_user)):
             accounts_list.append(AccountResponse(id=str(acc["_id"]), name=acc["name"], type=acc["type"], balance=balances.get(acc["name"], 0.0)))
         return {"success": True, "accounts": accounts_list}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.delete("/api/accounts/{account_id}", response_model=SuccessResponse)
 async def delete_account(account_id: str, current_user: dict = Depends(get_current_user)):
@@ -583,6 +664,13 @@ async def delete_account(account_id: str, current_user: dict = Depends(get_curre
 # User management endpoints (no changes)
 @app.post("/api/users", response_model=User, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate):
+    if _rl_blocked("register:*", 20, 3600):
+        raise HTTPException(status_code=429, detail="Too many registrations. Please try again later.")
+    _rl_hit("register:*", 3600)
+    if len(user.password) < 10:
+        raise HTTPException(status_code=422, detail="Password must be at least 10 characters")
+    if len(user.password.encode()) > 72:
+        raise HTTPException(status_code=422, detail="Password must be at most 72 bytes")
     existing_user = await get_user_by_email(app, user.email)
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -598,10 +686,9 @@ async def read_users_me(current_user = Depends(get_current_user)):
 
 @app.get("/api/users", response_model=UserListResponse)
 async def get_users(current_user: dict = Depends(get_current_user)):
-    users = []
-    async for user in app.mongodb["users"].find():
-        users.append(User(id=str(user["_id"]), email=user["email"], username=user["username"], full_name=user.get("full_name")))
-    return {"success": True, "users": users}
+    # Only the caller: listing every registered user would leak other people's e-mail addresses
+    me = User(id=str(current_user["_id"]), email=current_user["email"], username=current_user["username"], full_name=current_user.get("full_name"))
+    return {"success": True, "users": [me]}
 
 # Transaction endpoints (no changes)
 @app.get("/api/transactions", response_model=TransactionListResponse)
@@ -611,7 +698,7 @@ async def get_transactions(limit: int = Query(10, description="Number of transac
         transactions = await tracker.get_transactions(limit)
         return {"success": True, "transactions": transactions}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
     
 @app.post("/api/transactions/filter", response_model=TransactionListResponse)
 async def filter_transactions(payload: TransactionFilterPayload, current_user: dict = Depends(get_current_user)):
@@ -637,7 +724,7 @@ async def add_transaction(transaction: TransactionCreate, current_user: dict = D
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.delete("/api/transactions/{transaction_id}", response_model=SuccessResponse)
 async def delete_transaction(transaction_id: str, current_user: dict = Depends(get_current_user)):
@@ -649,7 +736,7 @@ async def delete_transaction(transaction_id: str, current_user: dict = Depends(g
             raise HTTPException(status_code=404, detail="Transaction not found")
     except Exception as e:
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.put("/api/transactions/{transaction_id}/status", response_model=SuccessResponse)
 async def update_status(transaction_id: str, update_data: TransactionUpdate, current_user: dict = Depends(get_current_user)):
@@ -661,7 +748,7 @@ async def update_status(transaction_id: str, update_data: TransactionUpdate, cur
             raise HTTPException(status_code=404, detail="Transaction not found")
     except Exception as e:
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/balances", response_model=BalanceResponse)
 async def get_balances(current_user: dict = Depends(get_current_user)):
@@ -670,7 +757,7 @@ async def get_balances(current_user: dict = Depends(get_current_user)):
         balances = await tracker.get_all_account_balances()
         return {"success": True, "balances": balances}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 # --- CHANGE 5: Updated endpoint signature to use `date` type.
 @app.get("/api/spending/category", response_model=SpendingCategoryResponse)
@@ -684,7 +771,7 @@ async def get_spending_by_category(
         spending = await tracker.get_spending_by_category(start_date, end_date)
         return {"success": True, "spending": spending}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 # --- CHANGE 6: Updated endpoint signature to use `date` type.
 @app.get("/api/charts/category", response_model=ChartResponseModel)
@@ -702,7 +789,7 @@ async def get_category_chart(
             raise HTTPException(status_code=404, detail="No data available for chart")
     except Exception as e:
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/charts/monthly", response_model=ChartResponseModel)
 async def get_monthly_chart(current_user: dict = Depends(get_current_user)):
@@ -715,7 +802,7 @@ async def get_monthly_chart(current_user: dict = Depends(get_current_user)):
             raise HTTPException(status_code=404, detail="No data available for chart")
     except Exception as e:
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 if __name__ == "__main__":
     import uvicorn
