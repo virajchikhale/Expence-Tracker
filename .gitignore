@@ -1,0 +1,4 @@
+# Real secrets live in .env (copy .env.example). Never commit it.
+.env
+.env.*
+!.env.example
