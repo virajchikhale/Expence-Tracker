@@ -13,7 +13,7 @@ cp .env.example .env            # set JWT_SECRET (openssl rand -hex 32) and MONG
 docker compose up -d --build
 ```
 
-Open **http://localhost:3000**, create an account and start adding transactions. The API listens on `127.0.0.1:8000`; MongoDB is only reachable from the backend container. To use MongoDB Atlas instead, set `MONGO_URI` in `.env`. MongoDB 5+ requires a CPU with AVX; on older hardware set `MONGO_IMAGE=mongo:4.4`. MongoDB 5+ requires a CPU with AVX; on older hardware set `MONGO_IMAGE=mongo:4.4`.
+Open **http://localhost:3000**, create an account and start adding transactions. The API listens on `127.0.0.1:8000`; MongoDB is only reachable from the backend container. To use MongoDB Atlas instead, set `MONGO_URI` in `.env`. MongoDB 5+ requires a CPU with AVX; on older hardware set `MONGO_IMAGE=mongo:4.4`.
 
 ## Configuration
 
