@@ -1,9 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Depends, status
-from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, EmailStr
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional
 from passlib.context import CryptContext
 from datetime import date, datetime, timedelta # 'date' is imported
 import jwt
@@ -641,7 +640,7 @@ async def create_account(account: AccountCreate, current_user: dict = Depends(ge
         return {"success": True, "message": f"Account created with ID {account_id}"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/accounts", response_model=AccountListResponse)
@@ -654,7 +653,7 @@ async def list_accounts(current_user: dict = Depends(get_current_user)):
         async for acc in accounts_cursor:
             accounts_list.append(AccountResponse(id=str(acc["_id"]), name=acc["name"], type=acc["type"], balance=balances.get(acc["name"], 0.0)))
         return {"success": True, "accounts": accounts_list}
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.delete("/api/accounts/{account_id}", response_model=SuccessResponse)
@@ -697,7 +696,7 @@ async def get_transactions(limit: int = Query(10, description="Number of transac
         tracker = await get_tracker(current_user)
         transactions = await tracker.get_transactions(limit)
         return {"success": True, "transactions": transactions}
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
     
 @app.post("/api/transactions/filter", response_model=TransactionListResponse)
@@ -723,7 +722,7 @@ async def add_transaction(transaction: TransactionCreate, current_user: dict = D
         return {"success": True, "message": f"Transaction added with ID {transaction_id}"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.delete("/api/transactions/{transaction_id}", response_model=SuccessResponse)
@@ -756,7 +755,7 @@ async def get_balances(current_user: dict = Depends(get_current_user)):
         tracker = await get_tracker(current_user)
         balances = await tracker.get_all_account_balances()
         return {"success": True, "balances": balances}
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 # --- CHANGE 5: Updated endpoint signature to use `date` type.
@@ -770,7 +769,7 @@ async def get_spending_by_category(
         tracker = await get_tracker(current_user)
         spending = await tracker.get_spending_by_category(start_date, end_date)
         return {"success": True, "spending": spending}
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled error"); raise HTTPException(status_code=500, detail="Internal server error")
 
 # --- CHANGE 6: Updated endpoint signature to use `date` type.

@@ -1,39 +1,102 @@
 name: ci
-on: [push, pull_request]
-permissions: { contents: read }
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# No paths: filters on purpose. A required check that is skipped never reports,
+# and that would block merging forever.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: Expence-Manager-Backend } }
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: Expence-Manager-Backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12", cache: pip }
-      - run: pip install -r requirements-dev.txt
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            Expence-Manager-Backend/requirements.txt
+            Expence-Manager-Backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt ruff==0.16.10 pip-audit==2.10.1
+      - run: ruff check .
       - run: pytest -q
       - run: pip-audit -r requirements.txt
+
   frontend:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: Expence-Manager-Frontend } }
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: Expence-Manager-Frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm, cache-dependency-path: Expence-Manager-Frontend/package-lock.json }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Expence-Manager-Frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-        env: { NEXT_TELEMETRY_DISABLED: "1" }
-      - run: npm audit --omit=dev --audit-level=critical   # the PostCSS copy bundled in Next is build-time only (see README)
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: npm audit (high and critical, production dependencies)
+        run: |
+          # Ignored advisories (build-time only: the PostCSS / source-map-js copy bundled
+          # inside Next.js is not shipped to browsers; no fixed Next release bundles a patched
+          # copy yet). Remove an id from the list as soon as Next picks up a fix.
+          { npm audit --omit=dev --json || test $? -eq 1; } > audit.json
+          jq -r --argjson ignore '["GHSA-68fv-2mgg-jv7q", "GHSA-6g55-p6wh-862q", "GHSA-r28c-9q8g-f849"]' '
+            [.vulnerabilities[].via[] | select(type == "object")
+              | select(.severity == "high" or .severity == "critical")
+              | select((.url | split("/") | last) as $id | ($ignore | index($id)) | not)
+              | "\(.severity) \(.name): \(.title) (\(.url))"] | unique
+            | if length == 0 then "no un-ignored high/critical advisories" else (.[], halt_error(1)) end' audit.json
+
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: JWT_SECRET=x MONGO_PASSWORD=x docker compose config -q
-      - run: JWT_SECRET=x MONGO_PASSWORD=x docker compose build
+      - run: docker build -t ci-backend ./Expence-Manager-Backend
+      - run: docker build -t ci-frontend ./Expence-Manager-Frontend
+
   secrets:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # The single check to require in branch protection. Job renames above never break it.
+  ci-gate:
+    if: always()
+    needs: [backend, frontend, docker, secrets]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail unless every job succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS"
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null

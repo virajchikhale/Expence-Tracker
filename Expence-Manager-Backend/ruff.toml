@@ -1,0 +1,4 @@
+# CI lint gate: real errors only (syntax, undefined names, unused imports/variables).
+line-length = 120
+[lint]
+select = ["E4", "E9", "F"]
